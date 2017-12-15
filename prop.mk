@@ -10,7 +10,6 @@ dalvik.vm.image-dex2oat-filter=speed
 # Audio
 PRODUCT_PROPERTY_OVERRIDES += \
 af.fast_track_multiplier=2 \
-audio.deep_buffer.media=true \
 audio.offload.disable=true \
 audio.offload.min.duration.secs=30 \
 audio.offload.video=true \
@@ -43,17 +42,13 @@ vendor.voice.path.for.pcm.voip=true \
 vendor.voice.playback.conc.disabled=true \
 vendor.voice.record.conc.disabled=false \
 vendor.voice.voip.conc.disabled=true \
-vendor.audio.dolby.ds2.enabled=true
+sys.display-size=1920x1080
 
 # Bluetooth
 PRODUCT_PROPERTY_OVERRIDES += \
 bluetooth.hfp.client=1 \
 vendor.qcom.bluetooth.soc=smd \
 ro.bluetooth.hfp.ver=1.7
-
-# Boot
-PRODUCT_PROPERTY_OVERRIDES += \
-sys.vendor.shutdown.waittime=500
 
 # Camera
 PRODUCT_PROPERTY_OVERRIDES += \
@@ -103,7 +98,7 @@ com.qc.hardware=true \
 debug.qc.hardware=true \
 debug.qctwa.preservebuf=1 \
 debug.qctwa.statusbar=1 \
-debug.sf.latch_unsignaled=0 \
+debug.cpurend.vsync=false \
 debug.sf.recomputecrop=0 \
 debug.sf.disable_backpressure=1 \
 dev.pm.dyn_samplingrate=1 \
@@ -117,8 +112,7 @@ ro.vendor.display.cabl=2 \
 sdm.debug.disable_skip_validate=1 \
 vendor.display.enable_default_color_mode=1 \
 vendor.display.disable_skip_validate=1 \
-vendor.gralloc.enable_fb_ubwc=1 \
-sys.display-size=1920x1080
+vendor.gralloc.enable_fb_ubwc=1
 
 # DPM
 PRODUCT_PROPERTY_OVERRIDES += \
@@ -162,7 +156,8 @@ vendor.video.disable.ubwc=1
 # Perf
 PRODUCT_PROPERTY_OVERRIDES += \
 ro.vendor.extension_library=libqti-perfd-client.so \
-ro.vendor.qti.sys.fw.bservice_enable=true
+ro.vendor.qti.sys.fw.bservice_enable=true \
+ro.vendor.qti.am.reschedule_service=true
 
 # Netmgrd
 PRODUCT_PROPERTY_OVERRIDES += \
@@ -206,15 +201,12 @@ ro.telephony.call_ring.multiple=false \
 ro.telephony.default_network=22,22 \
 ro.telephony.use_old_mnc_mcc_format=true \
 service.qti.ims.enabled=1 \
-vendor.rild.libpath=/vendor/lib64/libril-qc-qmi-1.so
+vendor.rild.libpath=/vendor/lib64/libril-qc-qmi-1.so \
+telephony.lteOnCdmaDevice=1 \
+persist.sys.fflag.override.settings_network_and_internet_v2=true
 
 # SurfaceFlinger
 PRODUCT_PROPERTY_OVERRIDES += \
-debug.sf.enable_gl_backpressure=1 \
-debug.sf.early_phase_offset_ns=500000 \
-debug.sf.early_app_phase_offset_ns=500000 \
-debug.sf.early_gl_phase_offset_ns=3000000 \
-debug.sf.early_gl_app_phase_offset_ns=15000000 \
 ro.surface_flinger.force_hwc_copy_for_virtual_displays=true \
 ro.surface_flinger.max_virtual_display_dimension=4096
 
@@ -237,6 +229,10 @@ ro.adb.secure=0 \
 ro.secure=0 \
 ro.debuggable=1
 
+# Usb
+PRODUCT_PROPERTY_OVERRIDES += \
+persist.vendor.usb.config.extra=none
+
 # Wifi
 PRODUCT_PROPERTY_OVERRIDES += \
 wifi.interface=wlan0
@@ -245,16 +241,20 @@ wifi.interface=wlan0
 PRODUCT_PROPERTY_OVERRIDES += \
 persist.sys.wfd.virtual=0
 
-# USB debugging
-PRODUCT_PROPERTY_OVERRIDES += \
-persist.sys.usb.config=mtp,adb \
-ro.adb.secure=0 \
-ro.secure=0 \
-ro.debuggable=1
-
 # Netflix
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.netflix.bsp_rev=Q660-13149-1
+
+# Dirac algo tsx 9/12
+PRODUCT_PROPERTY_OVERRIDES += \
+    persist.dirac.acs.controller=qem \
+    persist.dirac.acs.storeSettings=1 \
+    persist.dirac.acs.ignore_error=1
+
+# Dirac headset effect
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.audio.soundfx.dirac=true \
+    persist.audio.dirac.speaker=true
 
 # Properties
 PRODUCT_PROPERTY_OVERRIDES += \
@@ -268,23 +268,13 @@ PRODUCT_PROPERTY_OVERRIDES += \
     ro.config.sdha_apps_bg_max=64 \
     ro.config.sdha_apps_bg_min=8
 
-# Improve touch detection
+# Spectrum
 PRODUCT_PROPERTY_OVERRIDES += \
-    touch.pressure.scale=0.001 \
-    persist.sys.ui.hw=1 \
-    view.scroll_friction=10 \
-    touch.size.calibration=diameter \
-    touch.size.scale=1 \
-    touch.size.bias=0 \
-    touch.size.isSummed=0 \
-    touch.pressure.scale=0.001 \
-    touch.orientation.calibration=none \
-    touch.distance.calibration=none \
-    touch.distance.scale=0 \
-    touch.coverage.calibration=box \
-    touch.gestureMode=spots \
-    MultitouchSettleInterval=1ms \
-    MultitouchMinDistance=1px \
-    TapInterval=1ms \
-    TapSlop=1px
+    spectrum.support=1 \
+    persist.spectrum.kernel=Parallax
+
+# Fling Velocity
+PRODUCT_PROPERTY_OVERRIDES += \
+ro.min.fling_velocity=160 \
+ro.max.fling_velocity=20000
 
