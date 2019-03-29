@@ -17,6 +17,9 @@
 $(call inherit-product, vendor/xiaomi/mido/mido-vendor.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/product_launched_with_m.mk)
 
+# Overlays
+DEVICE_PACKAGE_OVERLAYS += $(LOCAL_PATH)/overlay
+
 # Screen density
 PRODUCT_AAPT_CONFIG := normal
 PRODUCT_AAPT_PREF_CONFIG := xxhdpi
@@ -28,18 +31,13 @@ TARGET_SCREEN_WIDTH := 1080
 PRODUCT_ENFORCE_RRO_TARGETS := \
     framework-res
 
+# AR config
+PRODUCT_COPY_FILES += \
+    device/xiaomi/mido/configs/android.hardware.camera.ar.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.camera.ar.xml
+
 # Soong namespaces
 PRODUCT_SOONG_NAMESPACES += \
     $(LOCAL_PATH)
-
-# Overlays
-DEVICE_PACKAGE_OVERLAYS += \
-    $(LOCAL_PATH)/overlay \
-    $(LOCAL_PATH)/overlay-lineage
-
-PRODUCT_ENFORCE_RRO_TARGETS := *
-PRODUCT_ENFORCE_RRO_EXCLUDED_OVERLAYS += \
-    $(LOCAL_PATH)/overlay-lineage/lineage-sdk
 
 # Permissions
 PRODUCT_COPY_FILES += \
@@ -127,19 +125,16 @@ PRODUCT_COPY_FILES += \
 
 # Bluetooth
 PRODUCT_PACKAGES += \
-    libldacBT_dec
+    libldacBT_dec \
+    libbt-vendor \
+    vendor.qti.hardware.btconfigstore@1.0.vendor
 
 # Camera
 PRODUCT_PACKAGES += \
     android.hardware.camera.provider@2.4-impl \
     android.hardware.camera.provider@2.4-service \
     camera.msm8953 \
-    libmm-qcamera \
-    libshim_camera
-
-# Doze
-PRODUCT_PACKAGES += \
-    CustomDoze
+    libmm-qcamera
 
 # Consumerir
 PRODUCT_PACKAGES += \
@@ -147,7 +142,8 @@ PRODUCT_PACKAGES += \
 
 # Dex
 PRODUCT_DEXPREOPT_SPEED_APPS += \
-    SystemUI
+    SystemUI \
+    NexusLauncherRelease
 
 # Display
 PRODUCT_PACKAGES += \
@@ -166,10 +162,6 @@ PRODUCT_PACKAGES += \
     libqdMetaData.system \
     libgenlock \
     libtinyxml
-
-# Device-specific settings
-PRODUCT_PACKAGES += \
-    XiaomiDoze
 
 # DRM
 PRODUCT_PACKAGES += \
@@ -212,7 +204,8 @@ PRODUCT_PACKAGES += \
 
 # HIDL
 PRODUCT_PACKAGES += \
-    android.hidl.base@1.0
+    android.hidl.base@1.0 \
+    android.hidl.manager@1.0-java
 
 # HW crypto
 PRODUCT_PACKAGES += \
@@ -257,11 +250,14 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     android.hardware.light@2.0-service.xiaomi_mido
 
+# LiveDisplay
+PRODUCT_PACKAGES += \
+    vendor.lineage.livedisplay@2.0-service-sdm
+
 # Media
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/media_codecs.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_codecs.xml \
     $(LOCAL_PATH)/configs/media_codecs_performance.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_codecs_performance.xml \
-    $(LOCAL_PATH)/configs/media_codecs_dolby_audio.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_codecs_dolby_audio.xml \
     $(LOCAL_PATH)/configs/media_profiles_V1_0.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_profiles_V1_0.xml
 
 PRODUCT_COPY_FILES += \
@@ -292,10 +288,10 @@ PRODUCT_PACKAGES += \
 
 # Power
 PRODUCT_PACKAGES += \
-    android.hardware.power@1.2-service-qti
+    android.harrdware.power@1.3-service.sm6150-libperfmgr \
+    powerhint.json
 
 PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/configs/powerhint.xml:$(TARGET_COPY_OUT_VENDOR)/etc/powerhint.xml \
     $(LOCAL_PATH)/configs/perf/perf-profile0.conf:$(TARGET_COPY_OUT_VENDOR)/etc/perf/perf-profile0.conf
 
 # QMI
@@ -306,6 +302,7 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     fstab.qcom \
     init.goodix.sh \
+    init.msm.usb.configfs.rc \
     init.qcom.early_boot.sh \
     init.qcom.post_boot.sh \
     init.qcom.rc \
@@ -328,18 +325,24 @@ PRODUCT_PACKAGES += \
 
 # RIL
 PRODUCT_PACKAGES += \
+    android.hardware.radio@1.0 \
     android.hardware.radio@1.2 \
+    android.hardware.radio@1.3 \
     android.hardware.radio@1.4 \
     android.hardware.radio.config@1.0 \
+    android.hardware.radio.config@1.1 \
+    android.hardware.radio.config@1.2 \
     android.hardware.secure_element@1.0 \
     librmnetctl \
     libcnefeatureconfig \
     libxml2 \
+    telephony-ext \
+    rild \
+    libprotobuf-cpp-full \
     qti-telephony-hidl-wrapper \
     qti_telephony_hidl_wrapper.xml \
     qti-telephony-utils \
     qti_telephony_utils.xml \
-    telephony-ext
 
 PRODUCT_BOOT_JARS += \
     telephony-ext
@@ -408,6 +411,7 @@ PRODUCT_COPY_FILES += \
 
 # Wi-Fi Display
 PRODUCT_PACKAGES += \
+    libaacwrapper \
     libnl
 
 PRODUCT_BOOT_JARS += \
