@@ -1,6 +1,12 @@
 #
 # system.prop for mido
 #
+
+# ART
+PRODUCT_PROPERTY_OVERRIDES += \
+dalvik.vm.dex2oat-filter=speed \
+dalvik.vm.image-dex2oat-filter=speed
+
 # Audio
 PRODUCT_PROPERTY_OVERRIDES += \
 af.fast_track_multiplier=2 \
@@ -8,6 +14,7 @@ audio.deep_buffer.media=true \
 audio.offload.disable=true \
 audio.offload.min.duration.secs=30 \
 audio.offload.video=true \
+persist.audio.dirac.speaker=true \
 persist.vendor.audio.fluence.speaker=true \
 persist.vendor.audio.fluence.voicecall=true \
 persist.vendor.audio.fluence.voicerec=false \
@@ -44,6 +51,10 @@ bluetooth.hfp.client=1 \
 vendor.qcom.bluetooth.soc=smd \
 ro.bluetooth.hfp.ver=1.7
 
+# Boot
+PRODUCT_PROPERTY_OVERRIDES += \
+sys.vendor.shutdown.waittime=500
+
 # Camera
 PRODUCT_PROPERTY_OVERRIDES += \
 camera.display.lmax=1280x720 \
@@ -71,8 +82,28 @@ debug.enable.sglscale=1 \
 debug.gralloc.enable_fb_ubwc=1 \
 debug.mdpcomp.logs=0 \
 debug.sf.enable_hwc_vds=1 \
-debug.sf.hw=0 \
+debug.sf.hw=1 \
 debug.sf.latch_unsignaled=1 \
+debug.composition.type=gpu \
+debug.enabletr=true \
+debug.overlayui.enable=1 \
+debug.performance.tuning=1 \
+hw3d.force=1 \
+hwui.disable_vsync=true \
+hwui.render_dirty_regions=false \
+persist.sys.composition.type=gpu \
+persist.sys.ui.hw=1 \
+ro.config.enable.hw_accel=true \
+ro.product.gpu.driver=1 \
+ro.fb.mode=1 \
+ro.vold.umsdirtyratio=60 \
+ro.sf.compbypass.enable=0 \
+video.accelerate.hw=1 \
+com.qc.hardware=true \
+debug.qc.hardware=true \
+debug.qctwa.preservebuf=1 \
+debug.qctwa.statusbar=1 \
+debug.sf.latch_unsignaled=0 \
 debug.sf.recomputecrop=0 \
 debug.sf.disable_backpressure=1 \
 dev.pm.dyn_samplingrate=1 \
@@ -86,7 +117,8 @@ ro.vendor.display.cabl=2 \
 sdm.debug.disable_skip_validate=1 \
 vendor.display.enable_default_color_mode=1 \
 vendor.display.disable_skip_validate=1 \
-vendor.gralloc.enable_fb_ubwc=1
+vendor.gralloc.enable_fb_ubwc=1 \
+sys.display-size=1920x1080
 
 # DPM
 PRODUCT_PROPERTY_OVERRIDES += \
@@ -178,6 +210,11 @@ vendor.rild.libpath=/vendor/lib64/libril-qc-qmi-1.so
 
 # SurfaceFlinger
 PRODUCT_PROPERTY_OVERRIDES += \
+debug.sf.enable_gl_backpressure=1 \
+debug.sf.early_phase_offset_ns=500000 \
+debug.sf.early_app_phase_offset_ns=500000 \
+debug.sf.early_gl_phase_offset_ns=3000000 \
+debug.sf.early_gl_app_phase_offset_ns=15000000 \
 ro.surface_flinger.force_hwc_copy_for_virtual_displays=true \
 ro.surface_flinger.max_virtual_display_dimension=4096
 
@@ -192,6 +229,13 @@ net.tcp.2g_init_rwnd=10
 # UI
 PRODUCT_PROPERTY_OVERRIDES += \
 sys.use_fifo_ui=1
+
+# USB debugging
+PRODUCT_PROPERTY_OVERRIDES += \
+persist.sys.usb.config=mtp,adb \
+ro.adb.secure=0 \
+ro.secure=0 \
+ro.debuggable=1
 
 # Wifi
 PRODUCT_PROPERTY_OVERRIDES += \
@@ -208,12 +252,9 @@ ro.adb.secure=0 \
 ro.secure=0 \
 ro.debuggable=1
 
-# Dirac
-persist.dirac.acs.controller=qem \
-persist.dirac.acs.storeSettings=1 \
-persist.dirac.acs.ignore_error=1 \
-ro.audio.soundfx.dirac=true \
-persist.audio.dirac.speaker=true
+# Netflix
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.netflix.bsp_rev=Q660-13149-1
 
 # Properties
 PRODUCT_PROPERTY_OVERRIDES += \
@@ -226,4 +267,24 @@ PRODUCT_PROPERTY_OVERRIDES += \
     ro.config.dha_th_rate=2.3 \
     ro.config.sdha_apps_bg_max=64 \
     ro.config.sdha_apps_bg_min=8
+
+# Improve touch detection
+PRODUCT_PROPERTY_OVERRIDES += \
+    touch.pressure.scale=0.001 \
+    persist.sys.ui.hw=1 \
+    view.scroll_friction=10 \
+    touch.size.calibration=diameter \
+    touch.size.scale=1 \
+    touch.size.bias=0 \
+    touch.size.isSummed=0 \
+    touch.pressure.scale=0.001 \
+    touch.orientation.calibration=none \
+    touch.distance.calibration=none \
+    touch.distance.scale=0 \
+    touch.coverage.calibration=box \
+    touch.gestureMode=spots \
+    MultitouchSettleInterval=1ms \
+    MultitouchMinDistance=1px \
+    TapInterval=1ms \
+    TapSlop=1px
 
