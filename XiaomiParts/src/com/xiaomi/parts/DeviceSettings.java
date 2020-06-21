@@ -21,26 +21,41 @@ import android.content.pm.PackageManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.SELinux;
 import android.os.Handler;
 import androidx.preference.PreferenceFragment;
 import androidx.preference.PreferenceManager;
 import androidx.preference.SwitchPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
+import android.content.Context;
+import android.content.SharedPreferences;
+import androidx.preference.SwitchPreference;
+import android.util.Log;
 
 import com.xiaomi.parts.kcal.KCalSettingsActivity;
 import com.xiaomi.parts.ambient.AmbientGesturePreferenceActivity;
 import com.xiaomi.parts.preferences.CustomSeekBarPreference;
 import com.xiaomi.parts.preferences.SecureSettingListPreference;
 import com.xiaomi.parts.preferences.SecureSettingSwitchPreference;
+import com.xiaomi.parts.preferences.LedBlinkPreference;
 import com.xiaomi.parts.preferences.VibratorStrengthPreference;
+import com.xiaomi.parts.preferences.YellowFlashPreference;
+import com.xiaomi.parts.SuShell;
+import com.xiaomi.parts.SuTask;
 
 public class DeviceSettings extends PreferenceFragment implements
         Preference.OnPreferenceChangeListener {
 
-    final static String PREF_TORCH_BRIGHTNESS = "torch_brightness";
-    public static final String TORCH_1_BRIGHTNESS_PATH = "/sys/devices/soc/qpnp-flash-led-25/leds/led:torch_0/max_brightness";
-    public static final String TORCH_2_BRIGHTNESS_PATH = "/sys/devices/soc/qpnp-flash-led-25/leds/led:torch_1/max_brightness";
+    private static final String TAG = "XiaomiParts";
+
+    public static final String KEY_YELLOW_TORCH_BRIGHTNESS = "yellow_torch_brightness";
+    public static final String KEY_WHITE_TORCH_BRIGHTNESS = "white_torch_brightness";
+    public static final String TORCH_1_BRIGHTNESS_PATH = "/sys/class/leds/led:torch_0/max_brightness";
+    public static final String TORCH_2_BRIGHTNESS_PATH = "/sys/class/leds/led:torch_1/max_brightness";
+
+    public static final String PREF_CHARGING_LED = "charging_led";
+    public static final String CHARGING_LED_PATH = "/sys/class/leds/charging/max_brightness";
 
     public static final String PREF_BACKLIGHT_DIMMER = "backlight_dimmer";
     public static final String BACKLIGHT_DIMMER_PATH = "/sys/module/mdss_fb/parameters/backlight_dimmer";
@@ -70,6 +85,7 @@ public class DeviceSettings extends PreferenceFragment implements
 
     public static final String PREF_MSM_TOUCHBOOST = "touchboost";
     public static final String MSM_TOUCHBOOST_PATH = "/sys/module/msm_performance/parameters/touchboost";
+    public static final String KEY_FLASH = "yellow_flash";
 
     public static final String HIGH_PERF_AUDIO = "highperfaudio";
     public static final String HIGH_AUDIO_PATH = "/sys/module/snd_soc_wcd9330/parameters/high_perf_mode";
@@ -84,19 +100,29 @@ public class DeviceSettings extends PreferenceFragment implements
     public static final String CPUCORE_SYSTEM_PROPERTY = "persist.cpucore.profile";
     public static final String PREF_LKM = "lkmprofile";
     public static final String LKM_SYSTEM_PROPERTY = "persist.lkm.profile";
+    public static final String PREF_TCP = "tcpcongestion";
+    public static final String TCP_SYSTEM_PROPERTY = "persist.tcp.profile";
 
     public static final String PREF_GPUBOOST = "gpuboost";
     public static final String GPUBOOST_SYSTEM_PROPERTY = "persist.gpuboost.profile";
     public static final String PREF_CPUBOOST = "cpuboost";
     public static final String CPUBOOST_SYSTEM_PROPERTY = "persist.cpuboost.profile";
 
-    private CustomSeekBarPreference mTorchBrightness;
+    private static final String SELINUX_CATEGORY = "selinux";
+    private static final String PREF_SELINUX_MODE = "selinux_mode";
+    private static final String PREF_SELINUX_PERSISTENCE = "selinux_persistence";
+
+    private CustomSeekBarPreference mWhiteTorchBrightness;
+    private CustomSeekBarPreference mYellowTorchBrightness;
+    private LedBlinkPreference mLedBlink;
+    private YellowFlashPreference mYellowFlash;
     private SecureSettingSwitchPreference mHighAudio;
     private SecureSettingSwitchPreference mMsmThermal;
     private SecureSettingSwitchPreference mCoreControl;
     private SecureSettingSwitchPreference mVddRestrict;
     private SecureSettingListPreference mCPUCORE;
     private SecureSettingListPreference mLKM;
+    private SecureSettingListPreference mTCP;
     private VibratorStrengthPreference mVibratorStrength;
     private Preference mKcal;
     private SecureSettingListPreference mSPECTRUM;
@@ -114,6 +140,8 @@ public class DeviceSettings extends PreferenceFragment implements
     private SecureSettingListPreference mGPUBOOST;
     private SecureSettingListPreference mCPUBOOST;
     private static Context mContext;
+    private SwitchPreference mSelinuxMode;
+    private SwitchPreference mSelinuxPersistence;
 
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
@@ -123,10 +151,13 @@ public class DeviceSettings extends PreferenceFragment implements
 
         String device = FileUtils.getStringProp("ro.build.product", "unknown");
 
-        mTorchBrightness = (CustomSeekBarPreference) findPreference(PREF_TORCH_BRIGHTNESS);
-        mTorchBrightness.setEnabled(FileUtils.fileWritable(TORCH_1_BRIGHTNESS_PATH) &&
-                FileUtils.fileWritable(TORCH_2_BRIGHTNESS_PATH));
-        mTorchBrightness.setOnPreferenceChangeListener(this);
+        mWhiteTorchBrightness = (CustomSeekBarPreference) findPreference(KEY_WHITE_TORCH_BRIGHTNESS);
+        mWhiteTorchBrightness.setEnabled(FileUtils.fileWritable(TORCH_1_BRIGHTNESS_PATH));
+        mWhiteTorchBrightness.setOnPreferenceChangeListener(this);
+
+        mYellowTorchBrightness = (CustomSeekBarPreference) findPreference(KEY_YELLOW_TORCH_BRIGHTNESS);
+        mYellowTorchBrightness.setEnabled(FileUtils.fileWritable(TORCH_2_BRIGHTNESS_PATH));
+        mYellowTorchBrightness.setOnPreferenceChangeListener(this);
 
         PreferenceCategory displayCategory = (PreferenceCategory) findPreference(CATEGORY_DISPLAY);
 
@@ -222,8 +253,9 @@ public class DeviceSettings extends PreferenceFragment implements
 
         if (FileUtils.fileWritable(MSM_TOUCHBOOST_PATH)) {
             mTouchboost = (SecureSettingSwitchPreference) findPreference(PREF_MSM_TOUCHBOOST);
-            mTouchboost.setChecked(FileUtils.getFileValueAsBoolean(MSM_TOUCHBOOST_PATH, true));
-            mTouchboost.setOnPreferenceChangeListener(this);
+            mTouchboost.setEnabled(Touchboost.isSupported());
+            mTouchboost.setChecked(Touchboost.isCurrentlyEnabled(this.getContext()));
+            mTouchboost.setOnPreferenceChangeListener(new Touchboost(getContext()));
         } else {
             getPreferenceScreen().removePreference(findPreference(PREF_MSM_TOUCHBOOST));
         }
@@ -238,6 +270,10 @@ public class DeviceSettings extends PreferenceFragment implements
         mCPUBOOST.setSummary(mCPUBOOST.getEntry());
         mCPUBOOST.setOnPreferenceChangeListener(this);
 
+        mYellowFlash = (YellowFlashPreference) findPreference(KEY_FLASH);
+        if (mYellowFlash != null) {
+            mYellowFlash.setEnabled(YellowFlashPreference.isSupported());
+        }
 
         if (FileUtils.fileWritable(MSM_THERMAL_PATH)) {
             mMsmThermal = (SecureSettingSwitchPreference) findPreference(PERF_MSM_THERMAL);
@@ -273,6 +309,11 @@ public class DeviceSettings extends PreferenceFragment implements
         mLKM.setSummary(mLKM.getEntry());
         mLKM.setOnPreferenceChangeListener(this);
 
+        mTCP = (SecureSettingListPreference) findPreference(PREF_TCP);
+        mTCP.setValue(FileUtils.getStringProp(TCP_SYSTEM_PROPERTY, "0"));
+        mTCP.setSummary(mTCP.getEntry());
+        mTCP.setOnPreferenceChangeListener(this);
+
         mLedBlink = (LedBlinkPreference) findPreference(PREF_CHARGING_LED);
         if (mLedBlink != null) {
             mLedBlink.setEnabled(LedBlinkPreference.isSupported());
@@ -281,6 +322,19 @@ public class DeviceSettings extends PreferenceFragment implements
         SwitchPreference fpsInfo = (SwitchPreference) findPreference(PREF_KEY_FPS_INFO);
         fpsInfo.setChecked(prefs.getBoolean(PREF_KEY_FPS_INFO, false));
         fpsInfo.setOnPreferenceChangeListener(this);
+
+        // SELinux
+        Preference selinuxCategory = findPreference(SELINUX_CATEGORY);
+        mSelinuxMode = (SwitchPreference) findPreference(PREF_SELINUX_MODE);
+        mSelinuxMode.setChecked(SELinux.isSELinuxEnforced());
+        mSelinuxMode.setOnPreferenceChangeListener(this);
+
+        mSelinuxPersistence =
+        (SwitchPreference) findPreference(PREF_SELINUX_PERSISTENCE);
+        mSelinuxPersistence.setOnPreferenceChangeListener(this);
+        mSelinuxPersistence.setChecked(getContext()
+        .getSharedPreferences("selinux_pref", Context.MODE_PRIVATE)
+        .contains(PREF_SELINUX_MODE));
     }
 
 
@@ -288,8 +342,11 @@ public class DeviceSettings extends PreferenceFragment implements
     public boolean onPreferenceChange(Preference preference, Object value) {
         final String key = preference.getKey();
         switch (key) {
-            case PREF_TORCH_BRIGHTNESS:
+            case KEY_WHITE_TORCH_BRIGHTNESS:
                 FileUtils.setValue(TORCH_1_BRIGHTNESS_PATH, (int) value);
+                break;
+
+            case KEY_YELLOW_TORCH_BRIGHTNESS:
                 FileUtils.setValue(TORCH_2_BRIGHTNESS_PATH, (int) value);
                 break;
 
@@ -315,6 +372,12 @@ public class DeviceSettings extends PreferenceFragment implements
                 mLKM.setValue((String) value);
                 mLKM.setSummary(mLKM.getEntry());
                 FileUtils.setStringProp(LKM_SYSTEM_PROPERTY, (String) value);
+                break;
+
+            case PREF_TCP:
+                mTCP.setValue((String) value);
+                mTCP.setSummary(mTCP.getEntry());
+                FileUtils.setStringProp(TCP_SYSTEM_PROPERTY, (String) value);
                 break;
 
             case PREF_SPECTRUM:
@@ -370,10 +433,6 @@ public class DeviceSettings extends PreferenceFragment implements
                  FileUtils.setValue(SPEAKER_GAIN_PATH, (int) value);
                 break;
 
-            case PREF_MSM_TOUCHBOOST:
-                FileUtils.setValue(MSM_TOUCHBOOST_PATH, (boolean) value);
-                break;
-
             case PREF_GPUBOOST:
                 mGPUBOOST.setValue((String) value);
                 mGPUBOOST.setSummary(mGPUBOOST.getEntry());
@@ -384,6 +443,18 @@ public class DeviceSettings extends PreferenceFragment implements
                 mCPUBOOST.setValue((String) value);
                 mCPUBOOST.setSummary(mCPUBOOST.getEntry());
                 FileUtils.setStringProp(CPUBOOST_SYSTEM_PROPERTY, (String) value);
+                break;
+
+            case PREF_SELINUX_MODE:
+                  if (preference == mSelinuxMode) {
+                  boolean enabled = (Boolean) value;
+                  new SwitchSelinuxTask(getActivity()).execute(enabled);
+                  setSelinuxEnabled(enabled, mSelinuxPersistence.isChecked());
+                  return true;
+                } else if (preference == mSelinuxPersistence) {
+                  setSelinuxEnabled(mSelinuxMode.isChecked(), (Boolean) value);
+                  return true;
+                }
                 break;
 
             case PREF_KEY_FPS_INFO:
@@ -401,6 +472,45 @@ public class DeviceSettings extends PreferenceFragment implements
         return true;
     }
 
+        private void setSelinuxEnabled(boolean status, boolean persistent) {
+          SharedPreferences.Editor editor = getContext()
+              .getSharedPreferences("selinux_pref", Context.MODE_PRIVATE).edit();
+          if (persistent) {
+            editor.putBoolean(PREF_SELINUX_MODE, status);
+          } else {
+            editor.remove(PREF_SELINUX_MODE);
+          }
+          editor.apply();
+          mSelinuxMode.setChecked(status);
+        }
+
+        private class SwitchSelinuxTask extends SuTask<Boolean> {
+          public SwitchSelinuxTask(Context context) {
+            super(context);
+          }
+          @Override
+          protected void sudoInBackground(Boolean... params) throws SuShell.SuDeniedException {
+            if (params.length != 1) {
+              Log.e(TAG, "SwitchSelinuxTask: invalid params count");
+              return;
+            }
+            if (params[0]) {
+              SuShell.runWithSuCheck("setenforce 1");
+            } else {
+              SuShell.runWithSuCheck("setenforce 0");
+            }
+          }
+
+          @Override
+          protected void onPostExecute(Boolean result) {
+            super.onPostExecute(result);
+            if (!result) {
+              // Did not work, so restore actual value
+              setSelinuxEnabled(SELinux.isSELinuxEnforced(), mSelinuxPersistence.isChecked());
+            }
+          }
+        }
+
     private boolean isAppNotInstalled(String uri) {
         PackageManager packageManager = getContext().getPackageManager();
         try {
@@ -411,3 +521,4 @@ public class DeviceSettings extends PreferenceFragment implements
         }
     }
 }
+
