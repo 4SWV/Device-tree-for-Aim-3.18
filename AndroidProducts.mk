@@ -14,9 +14,9 @@
 # limitations under the License.
 
 PRODUCT_MAKEFILES := \
-    $(LOCAL_DIR)/derp_mido.mk
+    $(LOCAL_DIR)/aim_mido.mk
 
 COMMON_LUNCH_CHOICES := \
-    derp_mido-eng \
-    derp_mido-userdebug \
-    derp_mido-user
+    aim_mido-eng \
+    aim_mido-userdebug \
+    aim_mido-user
